@@ -19,44 +19,6 @@ include "../node_modules/circomlib/circuits/mimcsponge.circom";
 // TODO: spec cool memory optimizations
 // TODO: handle invalid instruction [?]
 
-function LOG2_PROGRAM_SIZE() {
-    return 6;
-}
-
-function LOG2_DATA_SIZE() {
-    return 6;
-}
-
-function PROGRAM_SIZE() {
-    return 2 ** LOG2_PROGRAM_SIZE();
-}
-
-function DATA_SIZE() {
-    return 2 ** LOG2_DATA_SIZE();
-}
-
-// Flat memory, harvard model constants
-function MEMORY_SIZE_FLAT() {
-    return PROGRAM_SIZE() + DATA_SIZE();
-}
-
-function PROGRAM_START() {
-    return 0;
-}
-
-function PROGRAM_END() {
-    return PROGRAM_SIZE();
-}
-
-function DATA_START() {
-    return PROGRAM_END();
-}
-
-function DATA_END() {
-    return MEMORY_SIZE_FLAT();
-}
-
-
 template MPointer() {
     signal input imm_dec;
     signal input rs1Value_dec;
@@ -336,64 +298,8 @@ template StateHash_Tree() {
     mimc.ins[nPacks32] <== mRoot;
     mimc.k <== 0;
     out <== mimc.outs[0];
-
 }
 
-template ValidVMMultiStep_Tree(n, memoryDepth, programSize, rangeCheck) {
-    signal input pcIn;
-    signal input rIn[N_REGISTERS()];
-    signal input instructions[n];
-    signal input instructionProofs[n][memoryDepth];
-    signal input ms[n];
-    signal input mProofs[n][memoryDepth];
-    signal input mRoot0;
-    signal input root0;
-    signal input root1;
-
-    // component pcRangeCheck;
-    component rRangeCheck;
-    component instructionRangeCheck;
-    component mRangeCheck;
-
-    if (rangeCheck == 1) {
-        // pcRangeCheck = AssertInBitRange(R_SIZE());
-        // pcRangeCheck.in <== pcIn;
-        rRangeCheck = MultiAssertInBitRange(N_REGISTERS(), R_SIZE());
-        for (var ii = 0; ii < N_REGISTERS(); ii++) rRangeCheck.in[ii] <== rIn[ii];
-        instructionRangeCheck = MultiAssertInBitRange(n, R_SIZE());
-        for (var ii = 0; ii < n; ii++) instructionRangeCheck.in[ii] <== instructions[ii];
-        mRangeCheck = MultiAssertInBitRange(n, M_SLOT_SIZE());
-        for (var ii = 0; ii < n; ii++) mRangeCheck.in[ii] <== ms[ii];
-    }
-
-    component stateHash0 = StateHash_Tree();
-    stateHash0.pc <== pcIn;
-    for (var ii = 0; ii < N_REGISTERS(); ii++) stateHash0.r[ii] <== rIn[ii];
-    stateHash0.mRoot <== mRoot0;
-
-    root0 === stateHash0.out;
-
-    component vm = VMMultiStep_Tree(n, memoryDepth, programSize);
-    vm.pcIn <== pcIn;
-    for (var ii = 0; ii < N_REGISTERS(); ii++) vm.rIn[ii] <== rIn[ii];
-    vm.mRoot0 <== mRoot0;
-    for (var ii = 0; ii < n; ii++) {
-        vm.instructions[ii] <== instructions[ii];
-        vm.ms[ii] <== ms[ii];
-        for (var jj = 0; jj < n; jj++) {
-            vm.instructionProofs[ii][jj] <== instructionProofs[ii][jj];
-            vm.mProofs[ii][jj] <== mProofs[ii][jj];
-        }
-    }
-
-    component stateHash1 = StateHash_Tree();
-    stateHash1.pc <== vm.pcOut;
-    for (var ii = 0; ii < N_REGISTERS(); ii++) stateHash1.r[ii] <== vm.rOut[ii];
-    stateHash1.mRoot <== vm.mRoot1;
-
-    root1 === stateHash1.out;
-
-}
 
 // component main {public [root0, root1]} = ValidVMMultiStep_Flat(1, 0);
 // component main = ValidVMMultiStep_Flat(160, 0);

@@ -1,6 +1,6 @@
- const fs = require("fs");
+const fs = require("fs");
 const { getWasmTester } = require("./utils");
-const { textToMemory, textToMemoryTree } = require("../../vm/js/run");
+const { textToMemoryTree } = require("../../vm/js/run");
 const { multiStep_tree } = require("../../vm/js/vm");
 const { buildMimcSponge } = require("circomlibjs");
 

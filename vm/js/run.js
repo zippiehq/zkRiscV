@@ -55,12 +55,6 @@ function preprocessText(text) {
   return [program, data];
 }
 
-// FLAT memory
-function textToMemory(text) {
-  const [program, data] = preprocessText(text);
-  return programTextToMemory_Flat(program).concat(dataTextToMemory(data));
-}
-
 function textToMemoryTree(text, hash, zeroElement) {
   const [program, data] = preprocessText(text);
   let elements = programTextToMemory_Tree(program)
@@ -105,6 +99,5 @@ if (require.main === module) {
 
 module.exports = {
   runFile,
-  textToMemory,
   textToMemoryTree,
 };
