@@ -132,60 +132,6 @@ function alu(instr, rs1Value_dec, rs2Value_dec, pcIn) {
   }
 }
 
-function step_flat(state) {
-  // fetch instruction
-  const rawInstr_bin = zeroExtend(
-    fetchMemory(state.m, 4, state.pc).toString(2),
-    32
-  );
-  // console.log(state.pc + "\t" + rawInstr_bin);
-  // decode instruction
-  const instr = decodeRV32I(rawInstr_bin);
-  // load rs and pointer
-  const rd_dec = parseInt(instr.rd_bin, 2);
-  const rs1_dec = parseInt(instr.rs1_bin, 2);
-  const rs2_dec = parseInt(instr.rs2_bin, 2);
-  const rs1Value_dec = fetchRegister(state.r, rs1_dec);
-  const rs2Value_dec = fetchRegister(state.r, rs2_dec);
-  const mPointer = rs1Value_dec + instr.imm_dec;
-
-  // console.log("instr", instr);
-  // console.log("rs1Value_dec", rs1Value_dec);
-  // console.log("rs2Value_dec", rs2Value_dec);
-  // console.log("mPointer", mPointer);
-  // console.log(state.r);
-
-  let out;
-
-  const opcodeSlice = instr.opcode_bin_6_2;
-  if (opcodeSlice == "01000") {
-    // store
-    state.m[mPointer] = rs2Value_dec % 256;
-    state.pc += 4;
-    return;
-  } else if (opcodeSlice == "00000") {
-    // load
-    out = fetchMemory(state.m, 1, mPointer);
-    state.pc += 4;
-  } else {
-    // not load/store
-    const aluOut = alu(instr, rs1Value_dec, rs2Value_dec, state.pc);
-    out = aluOut.out;
-    state.pc = aluOut.pcOut;
-  }
-
-  if (opcodeSlice != "11000" && rd_dec > 0) {
-    // set rd
-    state.r[rd_dec - 1] = out;
-  }
-}
-
-function multiStep_flat(state, steps) {
-  for (let ii = 0; ii < steps; ii++) {
-    step_flat(state);
-  }
-}
-
 function step_tree(state, meta) {
   // fetch instruction
   const instrPointerAdj = state.pc / 4;
@@ -256,8 +202,6 @@ function multiStep_tree(state, meta, steps) {
 }
 
 module.exports = {
-  step_flat,
-  multiStep_flat,
   step_tree,
   multiStep_tree,
   alu,

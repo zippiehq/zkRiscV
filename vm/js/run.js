@@ -4,7 +4,7 @@ node run.js <filepath> <steps>
 
 const fs = require("fs");
 const MerkleTree = require("fixed-merkle-tree").MerkleTree;
-const { multiStep_flat, multiStep_tree } = require("./vm");
+const { multiStep_tree } = require("./vm");
 
 function programTextToMemory_Flat(programText) {
   const memory = new Array(64).fill(0);
@@ -70,25 +70,6 @@ function textToMemoryTree(text, hash, zeroElement) {
   return new MerkleTree(7, elements, { hashFunction: hash, zeroElement: zeroElement });
 }
 
-// Run in flat memory machine
-function run_flat(memory0, steps) {
-
-  const state = {
-    m: memory0.slice(),
-    r: new Array(31).fill(0),
-    pc: 0,
-  };
-  console.log("Program:")
-  console.log(state.m.slice(0, 64).join(","));
-  console.log("\nData0:");
-  console.log(state.m.slice(64, 128).join(","));
-  // console.log("\npc\tinstruction");
-  multiStep_flat(state, steps);
-  console.log("");
-  console.log(`Data${steps}:`);
-  console.log(state.m.slice(64, 128).join(","));
-}
-
 function run_tree(memoryTree, steps) {
 
   const state = {
@@ -108,13 +89,8 @@ function run_tree(memoryTree, steps) {
 
 function runFile(filepath, steps, flat) {
   const text = fs.readFileSync(filepath, "utf8");
-  if (flat) {
-    const memory = textToMemory(text);
-    run_flat(memory, steps);
-  } else {
-    const memoryTree = textToMemoryTree(text);
-    run_tree(memoryTree, steps);
-  }
+  const memoryTree = textToMemoryTree(text);
+  run_tree(memoryTree, steps);
 }
 
 function main() {
@@ -128,7 +104,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-  run_flat,
   runFile,
   textToMemory,
   textToMemoryTree,

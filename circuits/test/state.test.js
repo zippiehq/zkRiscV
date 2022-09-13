@@ -2,48 +2,6 @@ const { getWasmTester } = require("./utils");
 const { fetchMemory, fetchRegister } = require("../../vm/js/state");
 
 describe("state", function () {
-  describe("memory", function () {
-    const mSize = 64;
-    it("load", async function () {
-      const circuit = await getWasmTester("memory64Load.test.circom");
-      const fetchSize = 4;
-      const m = new Array(mSize).fill(null);
-      for (let ii = 0; ii < mSize; ii++) {
-        m[ii] = ii + 1;
-      }
-      for (let ii = 0; ii < mSize - fetchSize; ii++) {
-        const w = await circuit.calculateWitness(
-          { m: m, pointer_dec: ii },
-          true
-        );
-        await circuit.assertOut(w, { out_dec: fetchMemory(m, fetchSize, ii) });
-      }
-    });
-    it("store1", async function () {
-      const circuit = await getWasmTester("memory64Store1.test.circom");
-      const input = 255;
-      const m = new Array(mSize).fill(null);
-      for (let ii = 0; ii < mSize; ii++) {
-        m[ii] = ii + 1;
-      }
-      for (let kk = 0; kk < 2; kk++) {
-        for (let ii = 0; ii < mSize; ii++) {
-          const w = await circuit.calculateWitness(
-            { in_dec: input, pointer_dec: ii, k: kk, mIn: m },
-            true
-          );
-          const temp = m[ii];
-          if (kk == 1) {
-            m[ii] = input;
-          }
-          await circuit.assertOut(w, { mOut: m });
-          if (kk == 1) {
-            m[ii] = temp;
-          }
-        }
-      }
-    });
-  });
   describe("registers", function () {
     const nRegisters = 31;
     it("load", async function () {
